@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" /><title>YOLPの地図で最新の雨雲レーダーを重ねて表示 - js do it</title>
+<meta name="Description" content="jsdo.it - share JavaScript, HTML5 and CSS - " />
+<meta name="Keywords"  content="JavaScript,HTML5,CSS" />
+<meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1, maximum-scale=1">
+
+<style type="text/css"></style>
+<meta name="viewport" content="width=device-width, user-scalable=no,initial-scale=1.0" />
+<link rel="stylesheet" href="//code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css" />
+<style></style></head>
+<body>
+<div id="fb-root"></div>
+<script src="//code.jquery.com/jquery-1.8.2.min.js"></script>
+<script src="//code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
+
+<div data-role="page" id="page">
+    
+	<div data-role="header" data-theme="b">
+        <div data-role="fieldcontain">
+            <div class="ui-grid-a">
+    <div class="ui-block-a">
+        <button id="getGPS" data-role="button" data-icon="gear">現在地を取得する</button>
+    </div>
+    <div class="ui-block-b">
+        <div class="ui-grid-a">
+            <div class="ui-block-a">
+                <button id="zoomIn" data-role="button">+</button>
+            </div>
+            <div class="ui-block-b">
+                <button id="zoomOut" data-role="button">-</button>
+            </div>
+        </div>
+    </div>
+</div>
+        </div>
+    </div>
+	<div data-role="content">
+
+        <div id="map" style="width:300px; height:300px"></div>	
+	<div id="result"></div>
+
+    </div>
+    <div data-role="footer" data-theme="b">
+        <div class="ui-grid-a">
+            <div class="ui-block-b">
+            </div></div>
+        </div>
+</div>
+
+<script type="text/javascript">
+// forked from kjunichi's "GPSで緯度と経度を取得するだけ" http://jsdo.it/kjunichi/iakN
+var ymap;
+
+$('#page').live('pagecreate',function(){
+    var savedAccuracy;
+    var savedPos;
+    var watchId;
+    
+    //マップのサイズを画面にあわせる
+    var mapSize = window.innerWidth-40;
+    if(window.innerWidth > window.innerHeight) {
+        mapSize = window.innerHeight -40;
+    }
+    $("#map").width(window.innerWidth-40);
+    $("#map").height(window.innerHeight*0.65);
+    
+    function getMyPos() {
+    	// 一定時間(20秒)たったらあきらめる。
+        var timerId = setTimeout(function() {
+        	//alert("timeout!");
+        	navigator.geolocation.clearWatch(watchId);
+        	$("#result").html(savedPos.coords.latitude + "," + savedPos.coords.longitude
+                              + "<br>pos.coords.accuracy = "+savedPos.coords.accuracy);
+            //drawYmap(savedPos.coords.latitude, savedPos.coords.longitude);
+        },20000);
+        
+        watchId = navigator.geolocation.watchPosition(function(pos){
+        	// 任意の精度以下になったら取得をやめる。
+        	savedAccuracy = pos.coords.accuracy;
+        	savedPos = pos;
+        	if(pos.coords.accuracy < 300 ){
+                // 精度が出たらそこで完了する。
+	        	navigator.geolocation.clearWatch(watchId);
+                // タイマーをクリアする。
+                clearTimeout(timerId);
+    	        //$("#result").html(savedPos.coords.latitude + "," + savedPos.coords.longitude
+                //                  + "<br>pos.coords.accuracy = "+pos.coords.accuracy);
+		}
+		alert(savedPos.coords.latitude + "," + savedPos.coords.longitude);
+		document.location.href="http://wsproxy-slide.herokuapp.com/ame.html?lat="+savedPos.coords.latitude+"&lon="+savedPos.coords.longitude;
+            //drawYmap(savedPos.coords.latitude, savedPos.coords.longitude);
+        },
+		function(error){
+    		var message = "";
+
+        	switch (error.code) {
+
+          		// 位置情報が取得できない場合
+          		case error.POSITION_UNAVAILABLE:
+            		message = "位置情報の取得ができませんでした。";
+            		break;
+
+          		// Geolocationの使用が許可されない場合
+          		case error.PERMISSION_DENIED:
+            		message = "位置情報取得の使用許可がされませんでした。";
+            		break;
+
+          		// タイムアウトした場合
+          		case error.TIMEOUT:
+            		message = "位置情報取得中にタイムアウトしました。";
+            		break;
+				default:
+					message = "("+error.code+")"+error.message;
+					break;
+        	}
+        	alert(message);
+		},
+		{enableHighAccuracy:true,timeout:10000,maximumAge:0});
+	} // end of getMyPost
+					      
+    // 現在地ボタンがクリックされた場合の処理
+    $("#getGPS").live('click',function() {
+		// 現在地を取得する。
+		if (navigator.geolocation) {
+			// Geolocationに関する処理を記述
+			// 現在の位置情報を取得
+   			retryCount = 0;
+	   		startTime = new Date();
+    		getMyPos();
+		} else {
+  			window.alert("本ブラウザではGeolocationが使えません");
+		}
+    });
+    
+    // zoomIn
+    $("#zoomIn").live('click',function() {
+        ymap.zoomIn();
+    });
+    $("#zoomOut").live('click',function() {
+        ymap.zoomOut();
+    });
+});
+
+</script>
+</body>
+</html>
