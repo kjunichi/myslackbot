@@ -19,6 +19,12 @@ git clone https://github.com/kjunichi/myslackbot.git
 heroku container:push web -a HerokuAppName
 ```
 
+### Set up Enviroment values
+
+- CALENDAR_SECRET
+- CALENDAR_TOKEN
+- SLACK_TOKEN
+
 ## Bot commands
 
 ### Is it fine today?(only you are in Tokyo area)
