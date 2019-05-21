@@ -26,8 +26,6 @@
     "botkit": "*",
     "botbuilder-adapter-slack":"*",
     "ejs": ">=2.5.5",
-    "express": "^4.8.5",
-    "multer": "*",
     "google-auth-library": "^0.9.7",
     "googleapis": "^2.1.7",
     "logfmt": "^1.1.2"
