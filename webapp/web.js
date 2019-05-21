@@ -73,13 +73,13 @@ app.get('/command', function(req, res) {
         res.send(success);
       break;
     case "botkick":
-        controller.spawn({
-           token:SLACK_TOKEN
-        }).startRTM(function(err) {
-           if (err) {
-              throw new Error(err);
-           }
-        });
+        //controller.spawn({
+        //   adapter
+        //}).startRTM(function(err) {
+        //   if (err) {
+        //      throw new Error(err);
+        //   }
+        //});
 
         res.send("Bot kicked");
     default:
@@ -106,44 +106,45 @@ app.post('/upload',upload.array('images', 8),(req, res) => {
 
 });
 
-var port = Number(process.env.PORT || 5000);
-app.listen(port, function() {
-  console.log("Listening on " + port);
-  console.dir(process.env);
-});
+//var port = Number(process.env.PORT || 5000);
+//app.listen(port, function() {
+//  console.log("Listening on " + port);
+//  console.dir(process.env);
+//});
 
 var spawn = require('child_process').spawn;
-var Botkit = require('botkit');
+const {Botkit} = require('botkit');
+const { SlackAdapter} = require('botbuilder-adapter-slack');
 
-var SLACK_TOKEN = process.env.SLACK_TOKEN||(require("./secret.json")).SLACK_TOKEN;
+var SLACK_TOKEN = process.env.SLACK_TOKEN2||(require("./secret.json")).SLACK_TOKEN2;
+const SLACK_SECRET = process.env.SLACK_SECRET||(require("./secret.json")).SLACK_SECRET;
 
 if (!SLACK_TOKEN) {
   console.log('Error: Specify token in environment');
   process.exit(1);
 }
-
-var controller = Botkit.slackbot({
- debug: false,
- log: true
+let adapter = new SlackAdapter({clientSigningSecret:SLACK_SECRET,debug: false,log: true,botToken:SLACK_TOKEN});
+let controller = new Botkit({
+ adapter: adapter
 });
 
-controller.spawn({
-  token:SLACK_TOKEN
-}).startRTM(function(err) {
-  if (err) {
-    throw new Error(err);
-  }
-});
+//controller.spawn({
+//  token:SLACK_TOKEN
+//}).startRTM(function(err) {
+//  if (err) {
+//    throw new Error(err);
+//  }
+//});
 
-controller.hears(['hello','hi'],'direct_message,direct_mention,mention',function(bot,message) {
-    bot.reply(message,"Hello.");
+controller.hears(['hello','hi'],['direct_message','direct_mention','mention','message'],async(bot,message)=> {
+    await bot.reply(message,"Hello.");
 })
 
-controller.hears(['おーい','誰か','だれか'],'ambient',function(bot,message) {
-    bot.reply(message,"Hello.");
+controller.hears(['おーい','誰か','だれか'],'message',async (bot,message) =>{
+    await bot.reply(message,"Hello.");
 });
 
-controller.hears(['明日の天気どう'],'ambient',function(bot,message) {
+controller.hears(['明日の天気どう'],'message',async (bot,message) =>{
     var cmd = "curl --stderr /dev/null http://weather.livedoor.com/forecast/webservice/json/v1?city=130010|jq .forecasts[1]";
     function shspawn(command) {
       return spawn('sh', ['-c', command]);
@@ -158,31 +159,31 @@ controller.hears(['明日の天気どう'],'ambient',function(bot,message) {
       console.log('exec error: '+data);
     });
 
-    child.on('close',function(code) {
+    child.on('close',async (code) =>{
       // コマンド実行後の処理
       // codeでコマンドの実行の成否が確認できる。
       // この時点でbufに正常時はコマンドの出力結果が入っている。
       //console.dir(buf);
-        bot.reply(message,buf);
+        await bot.reply(message,buf);
     });
 });
 
-controller.hears(['雨どう'],'ambient',function(bot,message) {
-  bot.reply(message,"http://wsproxy-slide.herokuapp.com/amesh?"+(new Date()).getTime());
+controller.hears(['雨どう'],'message',async (bot,message) =>{
+  await bot.reply(message,"http://wsproxy-slide.herokuapp.com/amesh?"+(new Date()).getTime());
 });
 
-controller.hears(['予定'],'ambient',function(bot,message) {
-  libcalendar.getOurEvents((b)=>{
+controller.hears(['予定'],'message',async (bot,message) =>{
+  libcalendar.getOurEvents(async(b)=>{
     var a = "";
     for(var i = 0; i < b.length; i++) {
       a = a + b[i]+"\n";
     }
-    bot.reply(message,a);
+    await bot.reply(message,a);
   });
 
 });
 
-controller.hears(['天気どう'],'ambient',function(bot,message) {
+controller.hears(['天気どう'],'message',async (bot,message)=> {
     var cmd = "curl --stderr /dev/null http://weather.livedoor.com/forecast/webservice/json/v1?city=130010|jq .forecasts[0]";
     function shspawn(command) {
       return spawn('sh', ['-c', command]);
@@ -197,7 +198,7 @@ controller.hears(['天気どう'],'ambient',function(bot,message) {
       console.log('exec error: '+data);
     });
 
-    child.on('close',function(code) {
+    child.on('close',async (code) =>{
       // コマンド実行後の処理
       // codeでコマンドの実行の成否が確認できる。
       // この時点でbufに正常時はコマンドの出力結果が入っている。
@@ -221,7 +222,7 @@ controller.hears(['天気どう'],'ambient',function(bot,message) {
 	                        });
       items.push(tenki);
       console.log(items);
-        bot.reply(message,{text: buf,
+      await  bot.reply(message,{text: buf,
 		attachments: items},
 		function(err,resp) {
 			    console.log(err,resp);
@@ -229,7 +230,7 @@ controller.hears(['天気どう'],'ambient',function(bot,message) {
     });
 });
 
-controller.hears(['attach'],'direct_message,direct_mention',function(bot,message) {
+controller.hears(['attach'],'direct_message,direct_mention',async (bot,message) =>{
 
   var attachments = [];
   var attachment = {
@@ -258,15 +259,15 @@ controller.hears(['attach'],'direct_message,direct_mention',function(bot,message
 
   attachments.push(attachment);
 
-  bot.reply(message,{
+  await bot.reply(message,{
     text: 'See below...',
     attachments: attachments,
-  },function(err,resp) {
+  },(err,resp) =>{
     console.log(err,resp);
   });
 });
 
-controller.hears(['dm me'],'direct_message,direct_mention',function(bot,message) {
+controller.hears(['dm me'],'direct_message,direct_mention',async (bot,message) =>{
   bot.startConversation(message,function(err,convo) {
     convo.say('Heard ya');
   });
@@ -276,3 +277,20 @@ controller.hears(['dm me'],'direct_message,direct_mention',function(bot,message)
   })
 
 });
+
+
+controller.webserver.get('/amesh', (req, res) => {
+  console.log(ameshUtil.getAmeshImageUrl())
+  try {
+      ameshUtil.getImage((img)=>{
+          const now = new Date()
+        const formatted = now.toFormat("YYYYMMDDHH24")
+			            const mm5 = ("0" + (((now.toFormat("MI")-5) / 5) | 0) * 5).slice(-2)
+			            console.log("TIME = "+formatted + mm5)
+			            res.type('png')
+			            res.send(img)
+			          })
+  } catch(e) {
+    console.log(e);
+  }
+})

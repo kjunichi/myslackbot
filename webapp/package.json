@@ -24,7 +24,8 @@
   "dependencies": {
     "amesh-cli": "kjunichi/amesh-cli",
     "botkit": "*",
-    "ejs": "^1.0.0",
+    "botbuilder-adapter-slack":"*",
+    "ejs": ">=2.5.5",
     "express": "^4.8.5",
     "multer": "*",
     "google-auth-library": "^0.9.7",

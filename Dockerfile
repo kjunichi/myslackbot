@@ -1,4 +1,4 @@
-FROM node:8-alpine
+FROM node:10-alpine
 RUN apk update
 RUN apk --update add cairo-dev git python alpine-sdk libjpeg-turbo-dev libpng-dev curl jq giflib-dev
 RUN apk --update add tzdata && \

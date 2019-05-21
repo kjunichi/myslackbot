@@ -48,6 +48,7 @@ function listAllEvents(auth,cb) {
     }
     //console.log(res.items);
     const numCals = res.items.length;
+	  let errCals=0
     var doneCals = 0;
     for (i = 0; i < res.items.length; i++) {
       var calId = res.items[i].id;
@@ -67,6 +68,7 @@ function listAllEvents(auth,cb) {
         orderBy: 'startTime'
       }, (err2, res2) => {
         if (err2) {
+		errCals++
           console.log('The API returned an error: ' + err2);
           return;
         }
@@ -85,7 +87,7 @@ function listAllEvents(auth,cb) {
           }
         }
         doneCals++;
-        if (doneCals + 1 >= numCals) {
+        if (doneCals + 1 >= numCals - errCals) {
           return cb(buf);
         }
       });
